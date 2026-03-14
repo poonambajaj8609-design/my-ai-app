@@ -1,25 +1,20 @@
 export default async function handler(req, res) {
     try {
-        let body = {};
-        if (req.body) {
-            body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        }
-        
+        const body = req.body ? (typeof req.body === 'string' ? JSON.parse(req.body) : req.body) : {};
         const prompt = body.prompt || "Hello!";
         
-        // NEW 2026 STANDARD: Use the 'v1' chat completions path
-        // Defaulting to a very reliable, small model for testing
-        let modelId = "Qwen/Qwen2.5-0.5B-Instruct"; 
-        
-        // If you pasted a full URL in the box, we'll try to extract just the ID
-        let targetUrl = body.modelUrl || "";
-        if (targetUrl.includes("models/")) {
-            modelId = targetUrl.split("models/")[1];
+        // We are using a 'serverless' friendly model that is almost always online
+        // If you want to change it later, just change this string
+        let modelId = "HuggingFaceH4/zephyr-7b-beta"; 
+
+        // If you put a name in the box on the website, we use that instead
+        if (body.modelUrl && body.modelUrl.length > 5) {
+            // This part cleans the URL in case you pasted a full link
+            modelId = body.modelUrl.replace("https://huggingface.co/", "")
+                                   .replace("https://router.huggingface.co/hf-inference/models/", "");
         }
 
-        const routerUrl = `https://router.huggingface.co/hf-inference/models/${modelId}`;
-
-        const response = await fetch(routerUrl, {
+        const response = await fetch(`https://router.huggingface.co/hf-inference/models/${modelId}`, {
             headers: { 
                 "Authorization": `Bearer ${process.env.HF_TOKEN}`,
                 "Content-Type": "application/json"
@@ -27,19 +22,21 @@ export default async function handler(req, res) {
             method: "POST",
             body: JSON.stringify({ 
                 inputs: prompt,
-                parameters: { max_new_tokens: 50 } 
+                parameters: { max_new_tokens: 100 } 
             }),
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json([{ generated_text: `HF Error ${response.status}: ${errorText}` }]);
+            const errData = await response.json().catch(() => ({}));
+            return res.status(response.status).json([{ 
+                generated_text: `Error ${response.status}: ${errData.error || "Model not found. Try 'gpt2' or 'facebook/opt-125m' instead."}` 
+            }]);
         }
 
         const data = await response.json();
         res.status(200).json(data);
 
     } catch (err) {
-        res.status(500).json([{ generated_text: "Worker Crash: " + err.message }]);
+        res.status(500).json([{ generated_text: "System Crash: " + err.message }]);
     }
 }
