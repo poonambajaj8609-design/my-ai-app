@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Robot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #121212; color: white; }
+        button { padding: 15px; background: #00ffcc; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        #out { margin-top: 20px; color: #00ffcc; font-style: italic; border: 1px solid #333; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🤖 My GitHub Robot</h1>
+    <button onclick="askAI()">WAKE UP ROBOT</button>
+    <div id="out">Output will appear here...</div>
+
+    <script>
+        async function askAI() {
+            const out = document.getElementById('out');
+            out.innerText = "Connecting to server...";
+            try {
+                const res = await fetch('/api/chat');
+                const data = await res.json();
+                // We check data[0] because Hugging Face returns an array
+                out.innerText = data[0].generated_text || "The robot is shy and didn't answer.";
+            } catch (e) {
+                out.innerText = "Error: Couldn't reach the worker.";
+            }
+        }
+    </script>
+</body>
+</html>
