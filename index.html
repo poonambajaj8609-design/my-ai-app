@@ -3,150 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-AI | Grok Interface</title>
+    <title>𝕏 | Grok Multiverse</title>
     <style>
-        :root {
-            --bg: #000000;
-            --card: #0a0a0a;
-            --accent: #ffffff;
-            --text: #e7e9ea;
-            --border: #2f3336;
-        }
-
-        body { 
-            background-color: var(--bg); 
-            color: var(--text); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        /* Top Bar */
-        .header {
-            border-bottom: 1px solid var(--border);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo { font-weight: 900; font-size: 20px; letter-spacing: -1px; }
-
-        /* Chat Area */
-        #chat-window {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.5; }
-        .user { align-self: flex-end; background: var(--accent); color: #000; border-bottom-right-radius: 4px; }
-        .ai { align-self: flex-start; background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-
-        /* Input Area */
-        .input-area {
-            border-top: 1px solid var(--border);
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            background: var(--bg);
-        }
-
-        input {
-            flex: 1;
-            background: #16181c;
-            border: 1px solid transparent;
-            border-radius: 999px;
-            padding: 12px 20px;
-            color: white;
-            outline: none;
-        }
-
-        input:focus { border-color: var(--accent); }
-
-        button {
-            background: var(--accent);
-            color: black;
-            border: none;
-            border-radius: 999px;
-            padding: 0 20px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Grok Theme Toggle */
-        .grok-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            font-size: 12px;
-            padding: 5px 10px;
-        }
-
+        :root { --bg: #000; --card: #16181c; --accent: #fff; --text: #e7e9ea; --border: #2f3336; }
         .grok-mode { --accent: #00ffcc; --border: #004433; }
+        
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { border-bottom: 1px solid var(--border); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Model Switcher Area */
+        .model-settings { background: #0a0a0a; padding: 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
+        #modelInput { width: 80%; background: #000; border: 1px solid var(--border); color: #00ffcc; padding: 5px; border-radius: 4px; }
+
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 12px; border-radius: 15px; max-width: 85%; line-height: 1.4; word-wrap: break-word; }
+        .ai { background: var(--card); border: 1px solid var(--border); align-self: flex-start; }
+        .user { background: var(--accent); color: #000; align-self: flex-end; }
+        
+        .input-bar { padding: 15px; display: flex; gap: 10px; border-top: 1px solid var(--border); }
+        input[type="text"] { flex: 1; background: #202327; border: none; border-radius: 20px; padding: 12px; color: white; outline: none; }
+        .send-btn { background: var(--accent); color: black; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="header">
-        <div class="logo">𝕏 AI</div>
-        <button class="grok-btn" onclick="toggleGrok()">MODE: DEFAULT</button>
+        <div style="font-size: 20px; font-weight: bold;">𝕏</div>
+        <button onclick="document.body.classList.toggle('grok-mode')" style="background:transparent; color:var(--accent); border:1px solid var(--border); border-radius:5px; padding:5px;">TOGGLE GROK</button>
     </div>
 
-    <div id="chat-window">
-        <div class="msg ai">Ask me anything about Minecraft or coding.</div>
+    <div class="model-settings">
+        <label>Target Model URL:</label><br>
+        <input type="text" id="modelInput" value="https://api-inference.huggingface.co/models/gpt2">
     </div>
 
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="Ask Grok..." onkeypress="if(event.key === 'Enter') sendMsg()">
-        <button onclick="sendMsg()">Send</button>
+    <div id="chat-box">
+        <div class="msg ai">Interface initialized. Paste a Hugging Face URL above to swap brains.</div>
+    </div>
+
+    <div class="input-bar">
+        <input type="text" id="prompt" placeholder="Ask anything...">
+        <button class="send-btn" onclick="chat()">Send</button>
     </div>
 
     <script>
-        function toggleGrok() {
-            document.body.classList.toggle('grok-mode');
-            const btn = document.querySelector('.grok-btn');
-            btn.innerText = document.body.classList.contains('grok-mode') ? "MODE: GROK" : "MODE: DEFAULT";
-        }
+        async function chat() {
+            const p = document.getElementById('prompt');
+            const m = document.getElementById('modelInput');
+            const box = document.getElementById('chat-box');
+            if(!p.value) return;
 
-        async function sendMsg() {
-            const input = document.getElementById('userInput');
-            const chatWindow = document.getElementById('chat-window');
-            if (!input.value) return;
+            const uMsg = document.createElement('div');
+            uMsg.className = 'msg user';
+            uMsg.innerText = p.value;
+            box.appendChild(uMsg);
 
-            // Add User Message
-            const userDiv = document.createElement('div');
-            userDiv.className = 'msg user';
-            userDiv.innerText = input.value;
-            chatWindow.appendChild(userDiv);
-
-            // Create AI Message Box
-            const aiDiv = document.createElement('div');
-            aiDiv.className = 'msg ai';
-            aiDiv.innerText = "...";
-            chatWindow.appendChild(aiDiv);
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'msg ai';
+            aiMsg.innerText = "Querying model...";
+            box.appendChild(aiMsg);
             
-            const prompt = input.value;
-            input.value = "";
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            const userText = p.value;
+            const targetModel = m.value;
+            p.value = "";
 
             try {
-                // This calls your /api/chat.js worker
                 const res = await fetch('/api/chat', {
                     method: 'POST',
-                    body: JSON.stringify({ text: prompt })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: userText,
+                        modelUrl: targetModel 
+                    })
                 });
                 const data = await res.json();
-                aiDiv.innerText = data[0].generated_text || "The robot is recharging.";
-            } catch (e) {
-                aiDiv.innerText = "Error: Connection to AI lost.";
+                
+                // Handles different AI response formats
+                let responseText = "";
+                if (Array.isArray(data)) responseText = data[0].generated_text;
+                else if (data.generated_text) responseText = data.generated_text;
+                else if (data.error) responseText = "AI Error: " + data.error;
+                else responseText = JSON.stringify(data);
+
+                aiMsg.innerText = responseText;
+            } catch (err) {
+                aiMsg.innerText = "Connection lost. Ensure your Vercel Environment Variables are set.";
             }
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
